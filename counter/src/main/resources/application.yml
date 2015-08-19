@@ -1,0 +1,12 @@
+server:
+  port: 8081
+spring:
+  bus:
+    group: election
+    name: ${spring.application.name}
+    index: 1
+logging:
+  level:
+    com.netflix.discovery: 'OFF'
+    org.springframework.cloud: 'DEBUG'
+    
