@@ -4,3 +4,6 @@ spring:
   cloud:
     config:
       uri: ${CONFIG_SERVER_URI:${vcap.services.${PREFIX:}configserver.credentials.uri:http://user:password@localhost:8888}}
+logging:
+  level:
+    org.springframework.boot.developertools: 'DEBUG'

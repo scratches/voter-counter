@@ -14,14 +14,15 @@ import org.springframework.boot.actuate.metrics.integration.SpringIntegrationMet
 import org.springframework.boot.actuate.metrics.jmx.JmxMetricWriter;
 import org.springframework.boot.actuate.metrics.repository.redis.RedisMetricRepository;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.bus.runner.EnableMessageBus;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.stream.annotation.EnableModule;
+import org.springframework.cloud.stream.annotation.Source;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.MessagingGateway;
-import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.monitor.IntegrationMBeanExporter;
 import org.springframework.jmx.export.MBeanExporter;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
-@EnableMessageBus
+@EnableModule(Source.class)
 @IntegrationComponentScan
 @RestController
 @EnableDiscoveryClient
@@ -47,12 +48,7 @@ public class VoterApplication {
 	@RequestMapping(value="/votes", method=RequestMethod.POST)
 	public void accept(@RequestBody Vote vote) {
 		logger.info("Sending: " + vote);
-		voter.vote(vote);
-	}
-
-	@Bean
-	public DirectChannel output() {
-		return new DirectChannel();
+		this.voter.vote(vote);
 	}
 
 	@Bean
@@ -77,6 +73,11 @@ public class VoterApplication {
 		return new SpringIntegrationMetricReader(exporter);
 	}
 
+	@Bean
+	public AlwaysSampler alwaysSampler() {
+		return new AlwaysSampler();
+	}
+
 	public static void main(String[] args) throws InterruptedException {
 		SpringApplication.run(VoterApplication.class, args);
 	}
@@ -92,6 +93,6 @@ class Vote {
 
 @MessagingGateway(name = "voter")
 interface Voter {
-	@Gateway(requestChannel="output")
+	@Gateway(requestChannel=Source.OUTPUT)
 	void vote(Vote vote);
 }

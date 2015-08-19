@@ -14,20 +14,20 @@ import org.springframework.boot.actuate.metrics.integration.SpringIntegrationMet
 import org.springframework.boot.actuate.metrics.jmx.JmxMetricWriter;
 import org.springframework.boot.actuate.metrics.repository.redis.RedisMetricRepository;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.bus.runner.EnableMessageBus;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.cloud.stream.annotation.EnableModule;
+import org.springframework.cloud.stream.annotation.Sink;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.monitor.IntegrationMBeanExporter;
 import org.springframework.jmx.export.MBeanExporter;
-import org.springframework.messaging.MessageChannel;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootApplication
-@EnableMessageBus
+@EnableModule(Sink.class)
 @MessageEndpoint
 @EnableDiscoveryClient
 public class CounterApplication {
@@ -40,18 +40,15 @@ public class CounterApplication {
 	@Autowired
 	private ElectionRepository repository;
 
-	@Bean
-	public MessageChannel input() {
-		return new DirectChannel();
-	}
-
-	@ServiceActivator(inputChannel = "input")
+	@ServiceActivator(inputChannel = Sink.INPUT)
 	@Transactional
 	public void accept(Vote vote) {
+
 		logger.info("Received: " + vote);
-		Election election = repository.findOne(vote.getElection());
+
+		Election election = this.repository.findOne(vote.getElection());
 		if (election == null) {
-			election = repository.save(new Election());
+			election = this.repository.save(new Election());
 		}
 		Candidate candidate = election.getCandidate(vote.getCandidate());
 		if (candidate == null) {
@@ -65,8 +62,8 @@ public class CounterApplication {
 	@ExportMetricWriter
 	public RedisMetricRepository redisMetricWriter(
 			RedisConnectionFactory connectionFactory) {
-		return new RedisMetricRepository(connectionFactory, this.export.getRedis().getPrefix(),
-				this.export.getRedis().getKey());
+		return new RedisMetricRepository(connectionFactory, this.export.getRedis()
+				.getPrefix(), this.export.getRedis().getKey());
 	}
 
 	@Bean
@@ -81,6 +78,11 @@ public class CounterApplication {
 	public SpringIntegrationMetricReader springIntegrationMetricReader(
 			IntegrationMBeanExporter exporter) {
 		return new SpringIntegrationMetricReader(exporter);
+	}
+
+	@Bean
+	public AlwaysSampler alwaysSampler() {
+		return new AlwaysSampler();
 	}
 
 	public static void main(String[] args) throws InterruptedException {
