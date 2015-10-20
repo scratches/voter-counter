@@ -1,7 +1,5 @@
 package demo;
 
-import lombok.Data;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +14,8 @@ import org.springframework.boot.actuate.metrics.repository.redis.RedisMetricRepo
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.stream.annotation.EnableModule;
-import org.springframework.cloud.stream.annotation.Sink;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.integration.annotation.MessageEndpoint;
@@ -26,8 +24,10 @@ import org.springframework.integration.monitor.IntegrationMBeanExporter;
 import org.springframework.jmx.export.MBeanExporter;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.Data;
+
 @SpringBootApplication
-@EnableModule(Sink.class)
+@EnableBinding(Sink.class)
 @MessageEndpoint
 @EnableDiscoveryClient
 public class CounterApplication {

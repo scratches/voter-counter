@@ -1,9 +1,5 @@
 package demo;
 
-import lombok.Data;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
@@ -16,8 +12,8 @@ import org.springframework.boot.actuate.metrics.repository.redis.RedisMetricRepo
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.cloud.stream.annotation.EnableModule;
-import org.springframework.cloud.stream.annotation.Source;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.integration.annotation.Gateway;
@@ -30,14 +26,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
 @SpringBootApplication
-@EnableModule(Source.class)
+@EnableBinding(Source.class)
 @IntegrationComponentScan
 @RestController
 @EnableDiscoveryClient
+@Slf4j
 public class VoterApplication {
-
-	private static Logger logger = LoggerFactory.getLogger(VoterApplication.class);
 
 	@Autowired
 	Voter voter;
@@ -46,8 +44,8 @@ public class VoterApplication {
 	MetricExportProperties export;
 
 	@RequestMapping(value="/votes", method=RequestMethod.POST)
-	public void accept(@RequestBody Vote vote) {
-		logger.info("Sending: " + vote);
+	public void accepted(@RequestBody Vote vote) {
+		log.info("Sending: {}", vote);
 		this.voter.vote(vote);
 	}
 

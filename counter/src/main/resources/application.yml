@@ -4,13 +4,15 @@ spring:
   cloud:
     stream:
       bindings:
-        input: election
+        input:
+          destination: election
+          content-type: application/x-java-object;type=demo.Vote
 logging:
   level:
     com.netflix.discovery: 'OFF'
     org.springframework.cloud: 'DEBUG'
   pattern:
-    console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}]){yellow} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wex'
+    level: '%clr(%5p) %clr([trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}]){yellow}'
 eureka:
   instance:
     leaseRenewalIntervalInSeconds: 5
