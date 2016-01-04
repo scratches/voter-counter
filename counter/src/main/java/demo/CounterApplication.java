@@ -12,11 +12,13 @@ import org.springframework.boot.actuate.metrics.integration.SpringIntegrationMet
 import org.springframework.boot.actuate.metrics.jmx.JmxMetricWriter;
 import org.springframework.boot.actuate.metrics.repository.redis.RedisMetricRepository;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -33,9 +35,6 @@ import lombok.Data;
 public class CounterApplication {
 
 	private static Logger logger = LoggerFactory.getLogger(CounterApplication.class);
-
-	@Autowired
-	private MetricExportProperties export;
 
 	@Autowired
 	private ElectionRepository repository;
@@ -58,12 +57,21 @@ public class CounterApplication {
 		candidate.setScore(candidate.getScore() + vote.getScore());
 	}
 
-	@Bean
-	@ExportMetricWriter
-	public RedisMetricRepository redisMetricWriter(
-			RedisConnectionFactory connectionFactory) {
-		return new RedisMetricRepository(connectionFactory, this.export.getRedis()
-				.getPrefix(), this.export.getRedis().getKey());
+	@Configuration
+	@ConditionalOnProperty(value = "spring.metrics.export.enabled", matchIfMissing = true)
+	protected static class MetricExportConfiguration {
+
+		@Autowired
+		private MetricExportProperties export;
+
+		@Bean
+		@ExportMetricWriter
+		public RedisMetricRepository redisMetricWriter(
+				RedisConnectionFactory connectionFactory) {
+			return new RedisMetricRepository(connectionFactory,
+					this.export.getRedis().getPrefix(), this.export.getRedis().getKey());
+		}
+
 	}
 
 	@Bean

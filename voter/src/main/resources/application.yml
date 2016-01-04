@@ -10,8 +10,6 @@ spring:
 logging:
   level:
     com.netflix.discovery: 'OFF'
-  pattern:
-    level: '%clr(%5p) %clr([trace=%X{X-Trace-Id:-},span=%X{X-Span-Id:-}]){yellow}'
 
 eureka:
   instance:
